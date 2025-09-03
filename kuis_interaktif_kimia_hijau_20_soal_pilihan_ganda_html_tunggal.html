@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kuis Kimia Hijau – 20 Soal PG</title>
+  <style>
+    :root{
+      --bg:#0b1220;--card:#121a2b;--muted:#7f8dab;--accent:#2bd576;--accent2:#6bc8ff;--danger:#ff6b6b;
+    }
+    *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    body{margin:0;background:linear-gradient(120deg,#0b1220,#0f1630 40%,#0b1220);color:#e6eefc}
+    .container{max-width:1000px;margin:40px auto;padding:24px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.08);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    header{padding:28px 24px 10px}
+    header h1{margin:0;font-size:28px;letter-spacing:.2px}
+    header p{margin:6px 0 0;color:var(--muted)}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 18px}
+    .input{display:flex;flex-direction:column;gap:6px}
+    .input label{font-size:14px;color:#b8c4e3}
+    .input input{padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:#0e1527;color:#e6eefc}
+    .badge{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:rgba(43,213,118,.1);border:1px solid rgba(43,213,118,.35);color:#bff4d5;font-size:12px}
+    .btn{appearance:none;border:0;border-radius:14px;padding:12px 16px;font-weight:600;cursor:pointer}
+    .btn-primary{background:linear-gradient(90deg,var(--accent),#35e0a0);color:#0b1220}
+    .btn-secondary{background:#19233a;color:#e6eefc;border:1px solid rgba(255,255,255,0.08)}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+
+    .quiz{padding:18px 24px}
+    .q-item{padding:18px;border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:14px;background:rgba(1,8,21,.35)}
+    .q-item h3{margin:0 0 10px;font-size:16px}
+    .choices{display:grid;grid-template-columns:1fr;gap:8px}
+    .choice{display:flex;align-items:stretch;border:1px solid rgba(255,255,255,0.09);border-radius:12px;overflow:hidden}
+    .choice input{display:none}
+    .choice label{flex:1;padding:12px;cursor:pointer;display:flex;gap:10px;align-items:center}
+    .choice .letter{width:28px;height:28px;display:inline-grid;place-items:center;border-radius:8px;background:#17223a;color:#cfe4ff;font-weight:700}
+    .choice input:checked + label{outline:2px solid var(--accent2);background:rgba(107,200,255,.08)}
+
+    .sticky-controls{display:flex;gap:10px;justify-content:space-between;align-items:center;padding:16px 24px;border-top:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,rgba(11,18,32,.6),rgba(11,18,32,.85));position:sticky;bottom:0;backdrop-filter:blur(10px);border-radius:0 0 18px 18px}
+    .progress{height:10px;background:#16223a;border-radius:999px;overflow:hidden;flex:1;margin:0 10px}
+    .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),#8be0ff)}
+
+    .result{padding:22px 24px;border-top:1px solid rgba(255,255,255,0.08);display:none}
+    .score{font-size:22px;font-weight:700}
+    .score.good{color:#b6ffcc}.score.ok{color:#ffe8a6}.score.bad{color:#ffb0b0}
+
+    .board{margin-top:16px;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:auto}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.07);text-align:left}
+    th{position:sticky;top:0;background:#121a2b}
+    .footnote{color:var(--muted);font-size:12px;padding:0 24px 20px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card" id="card">
+      <header>
+        <div class="badge">Kuis Kimia Hijau • 20 Soal • 5 poin/soal • Tanpa batas waktu</div>
+        <h1>Media Pembelajaran Interaktif – Kuis Kimia Hijau</h1>
+        <p>Isi identitas, jawab semua soal, lalu kirim untuk melihat skor. Nilai maksimal 100.</p>
+      </header>
+      <div class="form-row">
+        <div class="input">
+          <label for="studentName">Nama</label>
+          <input id="studentName" type="text" placeholder="Nama lengkap" />
+        </div>
+        <div class="input">
+          <label for="studentClass">Kelas</label>
+          <input id="studentClass" type="text" placeholder="Mis. X IPA 1" />
+        </div>
+      </div>
+
+      <div class="quiz" id="quiz"></div>
+
+      <div class="sticky-controls">
+        <button class="btn btn-secondary" id="btnReset" type="button">Reset Jawaban</button>
+        <div class="progress" aria-label="progress menjawab"><div class="bar" id="bar"></div></div>
+        <button class="btn btn-primary" id="btnSubmit" type="button">Kirim Jawaban</button>
+      </div>
+
+      <div class="result" id="result"></div>
+      <div class="footnote">Catatan: Riwayat nama, kelas, dan skor akan tersimpan di perangkat ini (localStorage) sebagai <em>papan hasil</em> sederhana.</div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <div class="quiz" style="padding-bottom:8px">
+        <h2 style="margin:0 0 6px">Papan Hasil (Devices ini)</h2>
+        <p class="footnote" style="padding:0">Berikut daftar nama & kelas yang sudah mengerjakan di perangkat ini.</p>
+        <div class="board">
+          <table id="scoreTable">
+            <thead>
+              <tr><th>#</th><th>Nama</th><th>Kelas</th><th>Skor</th><th>Tanggal</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-secondary" id="exportCSV">Unduh CSV</button>
+          <button class="btn btn-secondary" id="clearBoard">Hapus Papan Hasil</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+      // 1 Definisi kimia hijau
+      {q:"Apa tujuan utama kimia hijau?",
+       choices:[
+        "Meningkatkan produksi apapun tanpa memikirkan limbah",
+        "Mengurangi penggunaan bahan kimia berbahaya sambil tetap efisien",
+        "Menghapus semua proses kimia dalam industri",
+        "Meningkatkan biaya agar produk lebih berkualitas",
+        "Memperbanyak penggunaan pelarut organik berbahaya"],
+       answer:1},
+      // 2 Prinsip: pencegahan limbah
+      {q:"Menurut prinsip kimia hijau, apa yang lebih baik daripada membersihkan limbah beracun?",
+       choices:["Membuangnya ke laut","Menyimpannya di gudang","Mencegah terbentuknya limbah sejak awal","Mencampurnya agar encer","Membakar semuanya"],
+       answer:2},
+      // 3 Prinsip: ekonomi atom
+      {q:"Prinsip 'ekonomi atom' berarti…",
+       choices:["Mengurangi harga bahan baku","Memaksimalkan atom reaktan masuk ke produk",
+        "Menambahkan katalis sebanyak mungkin","Menggunakan pelarut sebanyak-banyaknya","Menaikkan suhu reaksi"],
+       answer:1},
+      // 4 Prinsip: desain produk lebih aman
+      {q:"Desain produk kimia dalam kimia hijau sebaiknya…",
+       choices:["Sangat reaktif dan toksik","Tidak/kurang berbahaya bagi manusia & lingkungan",
+        "Sulit terdegradasi","Menghasilkan turunan sebanyak mungkin","Butuh pelarut berbahaya"],
+       answer:1},
+      // 5 Prinsip: pelarut lebih aman
+      {q:"Manakah praktik yang sejalan dengan prinsip pelarut lebih aman?",
+       choices:["Mengganti pelarut beracun dengan air/superkritikal CO2 bila memungkinkan",
+        "Menambah benzena karena titik didihnya cocok",
+        "Memakai pelarut klorinasi untuk semua reaksi",
+        "Mengabaikan bahaya pelarut demi kecepatan reaksi",
+        "Selalu distilasi pelarut bekas tanpa evaluasi"],
+       answer:0},
+      // 6 Efisiensi energi
+      {q:"Contoh penerapan prinsip efisiensi energi adalah…",
+       choices:["Selalu memanaskan reaksi ke 200°C","Menggunakan kondisi suhu kamar/katalis untuk menurunkan energi",
+        "Mendinginkan ke -78°C tanpa alasan","Memakai pelarut paling volatil","Menambah langkah pemurnian"],
+       answer:1},
+      // 7 Bahan baku terbarukan
+      {q:"Yang dimaksud 'bahan dasar yang dapat diperbarui' adalah…",
+       choices:["Bahan dari sumber fosil","Bahan yang tidak pernah habis",
+        "Feedstock berasal dari sumber terbarukan (biomassa, CO2, dll.)",
+        "Bahan yang paling murah saja","Bahan dengan massa molekul besar"],
+       answer:2},
+      // 8 Mengurangi turunan
+      {q:"Mengurangi pembentukan turunan (derivatives) bertujuan untuk…",
+       choices:["Memperbanyak limbah perlindungan gugus",
+        "Mengurangi langkah reaksi yang tidak perlu",
+        "Menambah konsumsi pelarut","Memperpanjang waktu reaksi","Menaikkan bahaya proses"],
+       answer:1},
+      // 9 Katalis
+      {q:"Mengapa katalis dianjurkan dalam kimia hijau?",
+       choices:["Katalis membuat reaksi lebih lambat",
+        "Untuk meningkatkan selektivitas dan menekan reaksi samping berbahaya",
+        "Agar reaksi menghasilkan lebih banyak limbah",
+        "Karena katalis selalu murah",
+        "Supaya reaksi berjalan tanpa keselamatan"],
+       answer:1},
+      // 10 Dapat terdegradasi
+      {q:"Produk kimia yang dirancang agar dapat terdegradasi akan…",
+       choices:["Bertahan selamanya di lingkungan","Mudah berubah menjadi produk yang tidak berbahaya",
+        "Selalu lebih toksik","Tidak bisa diproduksi massal","Selalu lebih mahal"],
+       answer:1},
+      // 11 Analisis real-time pencegahan polusi
+      {q:"Prinsip 'analisis serentak/real-time' dalam proses kimia bertujuan untuk…",
+       choices:["Mendeteksi dan mencegah polusi saat proses berlangsung",
+        "Menghentikan semua proses otomatis",
+        "Mengganti semua instrumen dengan manual",
+        "Memperbanyak sampel limbah",
+        "Menambah waktu produksi"],
+       answer:0},
+      // 12 Keselamatan proses
+      {q:"Memilih bahan kimia yang lebih aman dalam proses bertujuan untuk…",
+       choices:["Mencegah kecelakaan proses",
+        "Menaikkan risiko kebakaran","Memperbesar tekanan tak perlu","Menghasilkan lebih banyak limbah",
+        "Mewajibkan APD tingkat tinggi setiap saat"],
+       answer:0},
+      // 13 SDG – Clean Water & Sanitation
+      {q:"Kontribusi kimia hijau terhadap air bersih & sanitasi antara lain…",
+       choices:["Meningkatkan biaya air",
+        "Pemurnian air & desalinasi berbiaya rendah, penghilangan logam/mikropolutan",
+        "Membuang limbah ke sungai",
+        "Mengurangi akses sanitasi",
+        "Menghapus semua bahan kimia pembersih"],
+       answer:1},
+      // 14 SDG – Affordable & Clean Energy
+      {q:"Dalam energi bersih & terjangkau, kimia hijau berfokus pada…",
+       choices:["Bahan energi terbarukan & proses industri hemat energi",
+        "Meningkatkan konsumsi batu bara",
+        "Menghilangkan semua reaksi eksotermik",
+        "Meningkatkan konsumsi listrik tanpa efisiensi",
+        "Menghentikan riset material"],
+       answer:0},
+      // 15 SDG – Zero Hunger
+      {q:"Peran kimia hijau pada Zero Hunger TIDAK mencakup…",
+       choices:["Melindungi tanaman dari hama dengan cara lebih aman",
+        "Memperpanjang umur simpan melalui kemasan inovatif",
+        "Meningkatkan kualitas & keamanan pangan",
+        "Memutus saluran distribusi pangan",
+        "Meningkatkan produksi pangan yang berkelanjutan"],
+       answer:3},
+      // 16 SDG – Responsible Consumption & Production
+      {q:"Contoh kontribusi pada konsumsi & produksi bertanggung jawab adalah…",
+       choices:["Efisiensi proses produksi dan pengelolaan limbah yang inovatif",
+        "Membuang sisa produksi ke TPA tanpa pemilahan",
+        "Mengabaikan pemborosan makanan",
+        "Menghapus audit lingkungan",
+        "Menaikkan penggunaan bahan berbahaya"],
+       answer:0},
+      // 17 SDG – Climate Action
+      {q:"Dalam aksi iklim, riset kimia hijau diarahkan pada…",
+       choices:["Mitigasi & adaptasi perubahan iklim",
+        "Menambah emisi tanpa kendali",
+        "Menghentikan semua aktivitas industri",
+        "Mengganti semua plastik dengan logam",
+        "Menghapus pemantauan emisi"],
+       answer:0},
+      // 18 Identifikasi prinsip
+      {q:"Prinsip yang menekankan pemilihan pelarut/bahan pendukung yang lebih aman adalah…",
+       choices:["Ekonomi atom","Analisis serentak","Pelarut & bahan pendukung lebih aman","Katalisis","Efisiensi energi"],
+       answer:2},
+      // 19 Identifikasi prinsip
+      {q:"Prinsip yang mendorong penggunaan bahan dasar dari biomassa adalah…",
+       choices:["Bahan dasar dapat diperbarui","Mengurangi turunan","Analisis serentak","Keselamatan proses","Produk dapat terdegradasi"],
+       answer:0},
+      // 20 Konsep umum
+      {q:"Pernyataan yang paling menggambarkan hubungan kimia hijau & pembangunan berkelanjutan adalah…",
+       choices:["Kimia hijau tidak terkait SDGs",
+        "Kimia hijau membantu mewujudkan SDGs melalui riset, pendidikan, dan praktik manufaktur berkelanjutan",
+        "SDGs hanya urusan ekonomi",
+        "Kimia hijau menolak inovasi",
+        "Kimia hijau meningkatkan kemiskinan"],
+       answer:1},
+    ];
+
+    const quizEl = document.getElementById('quiz');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const btnReset = document.getElementById('btnReset');
+    const resultEl = document.getElementById('result');
+    const barEl = document.getElementById('bar');
+
+    // Shuffle questions shallow copy
+    const shuffled = QUESTIONS.map((q,i)=>({...q, idx:i+1}));
+
+    function render(){
+      quizEl.innerHTML = '';
+      shuffled.forEach((item,i)=>{
+        const wrap = document.createElement('div');
+        wrap.className = 'q-item';
+        const no = (i+1).toString().padStart(2,'0');
+        wrap.innerHTML = `<h3>${no}. ${item.q}</h3>`;
+        const choices = document.createElement('div');
+        choices.className = 'choices';
+        item.choices.forEach((c,ci)=>{
+          const id = `q${i}_c${ci}`;
+          const letter = String.fromCharCode(65+ci);
+          const row = document.createElement('div');
+          row.className='choice';
+          row.innerHTML = `
+            <input type="radio" name="q${i}" id="${id}" value="${ci}">
+            <label for="${id}"><span class="letter">${letter}</span><span>${c}</span></label>
+          `;
+          choices.appendChild(row);
+        });
+        wrap.appendChild(choices);
+        quizEl.appendChild(wrap);
+      })
+    }
+
+    function answeredCount(){
+      let count=0;
+      QUESTIONS.forEach((_,i)=>{
+        const sel = document.querySelector(`input[name=q${i}]:checked`);
+        if(sel) count++;
+      });
+      return count;
+    }
+
+    function updateProgress(){
+      const pct = Math.round((answeredCount()/QUESTIONS.length)*100);
+      barEl.style.width = pct+'%';
+      barEl.setAttribute('aria-valuenow', pct);
+    }
+
+    quizEl.addEventListener('change', updateProgress);
+
+    btnReset.addEventListener('click',()=>{
+      document.querySelectorAll('input[type=radio]').forEach(i=>i.checked=false);
+      updateProgress();
+      resultEl.style.display='none';
+    });
+
+    btnSubmit.addEventListener('click',()=>{
+      const name = document.getElementById('studentName').value.trim();
+      const cls = document.getElementById('studentClass').value.trim();
+      if(!name || !cls){
+        alert('Mohon isi Nama dan Kelas terlebih dahulu.');
+        return;
+      }
+      // pastikan semua terjawab
+      if(answeredCount() < QUESTIONS.length){
+        if(!confirm('Ada soal yang belum dijawab. Tetap kirim?')) return;
+      }
+      // hitung skor: 5 poin per soal
+      let correct = 0;
+      QUESTIONS.forEach((q,qi)=>{
+        const sel = document.querySelector(`input[name=q${qi}]:checked`);
+        if(sel && Number(sel.value) === q.answer) correct++;
+      });
+      const points = correct * 5; // 20*5 = 100
+      const pct = Math.round((points/100)*100);
+      const mood = points>=85? 'good' : points>=65? 'ok' : 'bad';
+
+      resultEl.style.display='block';
+      resultEl.innerHTML = `
+        <div class="score ${mood}">Skor ${points} / 100</div>
+        <p>Benar: ${correct} dari ${QUESTIONS.length} soal. Terima kasih, <strong>${name}</strong> (${cls}).</p>
+      `;
+
+      // simpan ke papan hasil (localStorage)
+      const entry = {name, cls, points, date: new Date().toLocaleString('id-ID')};
+      const key = 'greenChemistryQuizResults';
+      const data = JSON.parse(localStorage.getItem(key) || '[]');
+      data.push(entry);
+      localStorage.setItem(key, JSON.stringify(data));
+      loadBoard();
+      window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+    });
+
+    function loadBoard(){
+      const tbody = document.querySelector('#scoreTable tbody');
+      tbody.innerHTML='';
+      const data = JSON.parse(localStorage.getItem('greenChemistryQuizResults')||'[]');
+      data.forEach((d,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${i+1}</td><td>${d.name}</td><td>${d.cls}</td><td>${d.points}</td><td>${d.date}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('clearBoard').addEventListener('click',()=>{
+      if(confirm('Hapus semua data papan hasil di perangkat ini?')){
+        localStorage.removeItem('greenChemistryQuizResults');
+        loadBoard();
+      }
+    });
+
+    document.getElementById('exportCSV').addEventListener('click',()=>{
+      const data = JSON.parse(localStorage.getItem('greenChemistryQuizResults')||'[]');
+      const rows = [['Nama','Kelas','Skor','Tanggal'], ...data.map(d=>[d.name,d.cls,d.points,d.date])];
+      const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'papan-hasil-kimia-hijau.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    render();
+    updateProgress();
+    loadBoard();
+  </script>
+</body>
+</html>
